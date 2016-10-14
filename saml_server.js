@@ -88,8 +88,8 @@ Accounts.registerLoginHandler(function (loginRequest) {
 	
 	// check required fields
 	var allRequiredFields = true;
-	if(Meteor.settings.saml!=undefined && Meteor.settings.saml.requiredFields!=undefined){
-		Meteor.settings.saml.requiredFields.forEach((c)=>{
+	if(Meteor.settings.saml!=undefined && Meteor.settings.saml.samlFields!=undefined){
+		Meteor.settings.saml.samlFields.forEach((c)=>{
 			if(loginResult.profile[c]==undefined){
 				allRequiredFields=false;
 				continue;
@@ -136,8 +136,8 @@ Accounts.registerLoginHandler(function (loginRequest) {
 		
 		// fill profile
 		var profile = [];
-		if(Meteor.settings.saml!=undefined && Meteor.settings.saml.requiredFields!=undefined){
-			Meteor.settings.saml.requiredFields.forEach((c)=>{
+		if(Meteor.settings.saml!=undefined && Meteor.settings.saml.samlFields!=undefined){
+			Meteor.settings.saml.samlFields.forEach((c)=>{
 				profile[c] = loginResult.profile[c];
 			});
 		}

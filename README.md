@@ -30,7 +30,7 @@ settings = {"saml":[{
     "idpSLORedirectURL": "http://openam.idp.io/openam/IDPSloRedirect/metaAlias/zimt/idp",
      "privateKeyFile": "certs/mykey.pem",  // path is relative to $METEOR-PROJECT/private
      "publicCertFile": "certs/mycert.pem",  // eg $METEOR-PROJECT/private/certs/mycert.pem
-	 "requiredFields": ["Mail","Vorname"], // which fields has to be served by the SSO provider
+	 "samlFields": ["Mail","Vorname"], // which fields has to be served by the SSO provider
 	 "keyMeteorUser": "username", // identifier of user object, e.g. username - will be used for check with nameID
   }]}
   
