@@ -70,13 +70,53 @@ Accounts.registerLoginHandler(function (loginRequest) {
     if (Meteor.settings.debug) {
     console.log("RESULT :" + JSON.stringify(loginResult));
     }
-    if (loginResult && loginResult.profile && loginResult.profile.email) {
-        var user = Meteor.users.findOne({
-            'emails.address': loginResult.profile.email
-        });
+	
+	// our primary key of Meteor User
+	var primaryKey = "";
+	if(Meteor.settings.saml!=undefined && Meteor.settings.saml.keyMeteorUser!=undefined){
+		primaryKey=Meteor.settings.saml.keyMeteorUser;
+	}
+	else {
+		primaryKey="email";
+	}
+	
+	// new user
+	var createUser = false;
+	if(Meteor.settings.saml!=undefined && Meteor.settings.saml.createNewUser!=undefined){
+		createUser=Meteor.settings.saml.createNewUser;
+	}
+	
+	// check required fields
+	var allRequiredFields = true;
+	if(Meteor.settings.saml!=undefined && Meteor.settings.saml.requiredFields!=undefined){
+		Meteor.settings.saml.requiredFields.forEach((c)=>{
+			if(loginResult.profile[c]==undefined){
+				allRequiredFields=false;
+				continue;
+			}
+		});
+		
+		if(loginResult.profile[primaryKey]==undefined){
+			allRequiredFields=false;
+		}
+	}
+	else {
+		if(loginResult.profile[primaryKey]==undefined){
+			allRequiredFields=false;
+		}
+	}
+	
+    if (loginResult && loginResult.profile && allRequiredFields) {
+        var user = Meteor.users.findOne({primaryKey: loginResult.profile.nameID});
 
-        if (!user)
-            throw new Error("Could not find an existing user with supplied email " + loginResult.profile.email);
+		if (!user && createUser){
+			Meteor.users.insert({primaryKey: loginResult.profile.nameID});
+			var user = Meteor.users.findOne({primaryKey: loginResult.profile.nameID}); // try it again	
+		}
+        
+		if (!user){
+            throw new Error("Could not find an existing user with supplied " + primaryKey + " " + loginResult.profile.nameID);
+		}
 
 
         //creating the token and adding to the user
@@ -93,13 +133,24 @@ Accounts.registerLoginHandler(function (loginRequest) {
             idpSession: loginResult.profile.sessionIndex,
             nameID: loginResult.profile.nameID
         };
-
+		
+		// fill profile
+		var profile = [];
+		if(Meteor.settings.saml!=undefined && Meteor.settings.saml.requiredFields!=undefined){
+			Meteor.settings.saml.requiredFields.forEach((c)=>{
+				profile[c] = loginResult.profile[c];
+			});
+		}
+		
+		// update user
         Meteor.users.update({
             _id: user._id
         }, {
             $set: {
                 // TBD this should be pushed, otherwise we're only able to SSO into a single IDP at a time
-                'services.saml': samlLogin
+                'services.saml': samlLogin,
+				'profile': profile,
+				'lastLogin': new Date();
             }
         });
 
@@ -112,7 +163,7 @@ Accounts.registerLoginHandler(function (loginRequest) {
         return result
 
     } else {
-        throw new Error("SAML Profile did not contain an email address");
+        throw new Error("SAML Profile did not contain all required fields");
     }
 });
 

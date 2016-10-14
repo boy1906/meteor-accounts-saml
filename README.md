@@ -1,7 +1,7 @@
 Meteor-accounts-saml
 ==================
 
-SAML v2 login support for existing password based accounts
+SAML v2 login support for existing password based accounts and new ones.
 
 -----
 
@@ -29,7 +29,9 @@ settings = {"saml":[{
     "cert":"MIICizCCAfQCCQCY8tKaMc0 LOTS OF FUNNY CHARS ==",
     "idpSLORedirectURL": "http://openam.idp.io/openam/IDPSloRedirect/metaAlias/zimt/idp",
      "privateKeyFile": "certs/mykey.pem",  // path is relative to $METEOR-PROJECT/private
-     "publicCertFile": "certs/mycert.pem"  // eg $METEOR-PROJECT/private/certs/mycert.pem
+     "publicCertFile": "certs/mycert.pem",  // eg $METEOR-PROJECT/private/certs/mycert.pem
+	 "requiredFields": ["Mail","Vorname"], // which fields has to be served by the SSO provider
+	 "keyMeteorUser": "username", // identifier of user object, e.g. username - will be used for check with nameID
   }]}
   
 Meteor.settings = settings;
@@ -72,7 +74,7 @@ and if SingleLogout is needed
 ## Setup SAML SP (Consumer)
 
 1. Create a Meteor project by `meteor create sp` and cd into it.
-2. Add `steffo:meteor-accounts-saml`
+2. Add `boy1906:meteor-accounts-saml`
 3. Create `server/lib/settings.js` as described above. Since Meteor loads things in `server/lib` first, this ensures that your settings are respected even on Galaxy where you cannot use `meteor --settings`. 
 4. Put your private key and your cert (not the IDP's one) into the "private" directory. Eg if your meteor project is at `/Users/steffo/sp` then place them in `/Users/steffo/sp/private`
 5. Check if you can receive SP metadata eg via `curl http://localhost:3000/_saml/metadata/openam`. Output should look like:
@@ -118,6 +120,6 @@ and if SingleLogout is needed
 * Check for better/alternative SAML profile. I have the impression that the SAML Web Browser SSO profile somewhat conflicts with Meteor's DDP/websocket approach. Eg when the browser issues an HTTP request, Meteor apps don't necessarily know from which user/session this request comes from (ja, we could use cookies but that's not the the Meteor-way).
 
 ## Credits
-Based Nat Strauser's Meteor/SAML package _natestrauser:meteor-accounts-saml_ which is
+Based Steffo's Meteor/SAML package steffo:meteor-accounts-saml which is
 heavily derived from https://github.com/bergie/passport-saml.
 
