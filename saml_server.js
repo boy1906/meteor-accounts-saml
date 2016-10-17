@@ -68,13 +68,23 @@ Accounts.registerLoginHandler(function (loginRequest) {
     }
     var loginResult = Accounts.saml.retrieveCredential(loginRequest.credentialToken);
     if (Meteor.settings.debug) {
-    console.log("RESULT :" + JSON.stringify(loginResult));
+        console.log("RESULT :" + JSON.stringify(loginResult));
+    }
+
+    // check provider - get selected saml provider settings
+    var index = 0;
+    if(Meteor.settings.saml!=undefined){
+        Meteor.settings.saml.forEach(function(c) {
+            if(c.provider==Accounts.saml.RelayState){
+                index = Meteor.settings.saml.indexOf(c);
+            }
+        });
     }
 	
 	// our primary key of Meteor User
 	var primaryKey = "";
-	if(Meteor.settings.saml!=undefined && Meteor.settings.saml.keyMeteorUser!=undefined){
-		primaryKey=Meteor.settings.saml.keyMeteorUser;
+	if(Meteor.settings.saml!=undefined && Meteor.settings.saml[index].keyMeteorUser!=undefined){
+		primaryKey=Meteor.settings.saml[index].keyMeteorUser;
 	}
 	else {
 		primaryKey="email";
@@ -82,36 +92,36 @@ Accounts.registerLoginHandler(function (loginRequest) {
 	
 	// new user
 	var createUser = false;
-	if(Meteor.settings.saml!=undefined && Meteor.settings.saml.createNewUser!=undefined){
-		createUser=Meteor.settings.saml.createNewUser;
+	if(Meteor.settings.saml!=undefined && Meteor.settings.saml[index].createNewUser!=undefined){
+		createUser=Meteor.settings.saml[index].createNewUser;
 	}
-	
+
 	// check required fields
 	var allRequiredFields = true;
-	if(Meteor.settings.saml!=undefined && Meteor.settings.saml.samlFields!=undefined){
-		Meteor.settings.saml.samlFields.forEach((c)=>{
-			if(loginResult.profile[c]==undefined){
-				allRequiredFields=false;
-				continue;
-			}
-		});
-		
-		if(loginResult.profile[primaryKey]==undefined){
-			allRequiredFields=false;
-		}
+	if(Meteor.settings.saml!=undefined && Meteor.settings.saml[index].samlFields!=undefined){
+        Meteor.settings.saml[index].samlFields.forEach(function(c) {
+            if(loginResult.profile[c]==undefined){
+                allRequiredFields=false;
+            }
+        });
 	}
 	else {
-		if(loginResult.profile[primaryKey]==undefined){
-			allRequiredFields=false;
-		}
+        allRequiredFields=false;
 	}
 	
     if (loginResult && loginResult.profile && allRequiredFields) {
-        var user = Meteor.users.findOne({primaryKey: loginResult.profile.nameID});
+        var temp = {};
+        temp[primaryKey]=loginResult.profile.nameID;
+        var user = Meteor.users.findOne(temp);
 
 		if (!user && createUser){
-			Meteor.users.insert({primaryKey: loginResult.profile.nameID});
-			var user = Meteor.users.findOne({primaryKey: loginResult.profile.nameID}); // try it again	
+		    var temp2 = temp;
+            temp2["createdAt"]=new Date();
+			Meteor.users.insert(temp2);
+			var user = Meteor.users.findOne(temp); // try it again
+            if (Meteor.settings.debug) {
+                console.log("create user with " + primaryKey + " " + loginResult.profile.nameID);
+            }
 		}
         
 		if (!user){
@@ -135,11 +145,11 @@ Accounts.registerLoginHandler(function (loginRequest) {
         };
 		
 		// fill profile
-		var profile = [];
-		if(Meteor.settings.saml!=undefined && Meteor.settings.saml.samlFields!=undefined){
-			Meteor.settings.saml.samlFields.forEach((c)=>{
-				profile[c] = loginResult.profile[c];
-			});
+		var profile = {};
+		if(Meteor.settings.saml!=undefined && Meteor.settings.saml[index].samlFields!=undefined){
+            Meteor.settings.saml[index].samlFields.forEach(function(c) {
+                profile[c] = loginResult.profile[c];
+            });
 		}
 		
 		// update user
@@ -150,7 +160,7 @@ Accounts.registerLoginHandler(function (loginRequest) {
                 // TBD this should be pushed, otherwise we're only able to SSO into a single IDP at a time
                 'services.saml': samlLogin,
 				'profile': profile,
-				'lastLogin': new Date();
+				'lastlogin': new Date()
             }
         });
 
