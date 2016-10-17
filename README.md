@@ -30,8 +30,10 @@ settings = {"saml":[{
     "idpSLORedirectURL": "http://openam.idp.io/openam/IDPSloRedirect/metaAlias/zimt/idp",
      "privateKeyFile": "certs/mykey.pem",  // path is relative to $METEOR-PROJECT/private
      "publicCertFile": "certs/mycert.pem",  // eg $METEOR-PROJECT/private/certs/mycert.pem
-	 "samlFields": ["Mail","Vorname"], // which fields has to be served by the SSO provider
-	 "keyMeteorUser": "username", // identifier of user object, e.g. username - will be used for check with nameID
+     "samlFields": ["Mail","Vorname"], // which fields has to be served by the SSO provider
+     "keyMeteorUser": "username", // identifier of user object, e.g. username - will be used for check with nameID
+     "createNewUser": true, // it is allowed to create new users
+     "identifierFormat":"urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified", // which format of nameID should we get from SSO 
   }]}
   
 Meteor.settings = settings;
