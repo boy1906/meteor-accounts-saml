@@ -111,7 +111,7 @@ Accounts.registerLoginHandler(function (loginRequest) {
 	
     if (loginResult && loginResult.profile && allRequiredFields) {
         var temp = {};
-        temp[primaryKey]=loginResult.profile.nameID;
+        temp[primaryKey]=loginResult.profile.nameID.toLowerCase();
         var user = Meteor.users.findOne(temp);
 
 		if (!user && createUser){
