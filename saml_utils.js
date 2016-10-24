@@ -458,7 +458,8 @@ SAML.prototype.generateServiceProviderMetadata = function (callbackUrl) {
 
         decryptionCert = decryptionCert.replace(/-+BEGIN CERTIFICATE-+\r?\n?/, '');
         decryptionCert = decryptionCert.replace(/-+END CERTIFICATE-+\r?\n?/, '');
-        decryptionCert = decryptionCert.replace(/\r\n/g, '\n');
+        decryptionCert = decryptionCert.replace(/\r\n/g, '');
+        decryptionCert = decryptionCert.replace(/\n/g, '');
 
         keyDescriptor = {
             'ds:KeyInfo': {
