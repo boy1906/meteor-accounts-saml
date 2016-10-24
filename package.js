@@ -1,7 +1,7 @@
 Package.describe({
     name:"boy1906:meteor-accounts-saml",
     summary: "SAML Login (SP) for Meteor.",
-  version: "0.1.0",
+  version: "0.1.1",
   git: "https://github.com/boy1906/meteor-accounts-saml.git"
 });
 
