@@ -1,15 +1,12 @@
 Meteor-accounts-saml
 ==================
 
-SAML v2 login support for existing password based accounts and new ones.
+SAML v2 login support. This plugin can be used for login with existing password based accounts and for creating new ones. For security reasons you can sign the requests between your app and the SSO-Service.
+
+
 
 -----
 
-## Demo
-
-For OpenIDP, see the example app `example-openidp` and http://accounts-saml-example.meteor.com/ for a demo.
-
-For OpenAM, see the example app `openam-example`.
 
 ## Important Notes
 
@@ -22,6 +19,8 @@ For OpenAM, see the example app `openam-example`.
 Put SAML settings in eg `server/lib/settings.js` like so:
 
 ```
+let fs = Npm.require('fs');
+
 settings = {"saml":[{
     "provider":"openam",
     "entryPoint":"https://openam.idp.io/openam/SSORedirect/metaAlias/zimt/idp",
@@ -33,7 +32,9 @@ settings = {"saml":[{
      "samlFields": ["Mail","Vorname"], // which fields has to be served by the SSO provider
      "keyMeteorUser": "username", // identifier of user object, e.g. username - will be used for check with nameID
      "createNewUser": true, // it is allowed to create new users
-     "identifierFormat":"urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified", // which format of nameID should we get from SSO 
+     "identifierFormat":"urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified", // which format of nameID should we get from SSO
+     "privateCert": fs.readFileSync('./assets/app/certs/server.crt', 'utf-8'),
+     "privateKey": fs.readFileSync('./assets/app/certs/key.pem', 'utf-8'),
   }]}
   
 Meteor.settings = settings;
@@ -101,27 +102,12 @@ and if SingleLogout is needed
   </SPSSODescriptor>
 </EntityDescriptor>
   ```
-
-##OpenAM Setup
-
-1. I prefer using OpenAM realms. Set up a realm using a name that matches the one in the entry point URL of the `settings.json` file: `https://openam.idp.io/openam/SSORedirect/metaAlias/<YOURREALM>/idp`; we used `zimt` above.
-2. Save the SP metadata (obtained in Step 5 above) in a file `sp-metadata.xml`.
-3. Logon OpenSSO console as `amadmin` and select _Common Tasks > Register Remote Service Provider_
-4. Select the corresponding real and upload the metadata (alternatively, point OpenAM to the SP's metadata URL eg `http://sp.meteor.com/_saml/metadata/openam`). If all goes well the new SP shows up under _Federation > Entity Providers_ 
-
-
-
-## OpenIDP setup
-- EntryID = http://accounts-saml-example.meteor.com
-- Name of Service = meteor-accounts-saml-example
-- AssertionConsumerService endpoint = http://accounts-saml-example.meteor.com/_saml/validate/openidp/
-
-## Roadmap
-* Introduction of IDP types (eg openam, auth0 etc) to support implementaion specific workarounds.
-* Support for different SAML Bindings
-* Check for better/alternative SAML profile. I have the impression that the SAML Web Browser SSO profile somewhat conflicts with Meteor's DDP/websocket approach. Eg when the browser issues an HTTP request, Meteor apps don't necessarily know from which user/session this request comes from (ja, we could use cookies but that's not the the Meteor-way).
+## Generate Custom Certificate
+```
+openssl req -newkey rsa:2048 -new -nodes -keyout key.pem -out csr.pem
+openssl x509 -req -in csr.pem -signkey key.pem -out server.crt
+```
 
 ## Credits
 Based Steffo's Meteor/SAML package steffo:meteor-accounts-saml which is
 heavily derived from https://github.com/bergie/passport-saml.
-
