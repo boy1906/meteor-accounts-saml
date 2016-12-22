@@ -400,10 +400,12 @@ SAML.prototype.validateResponse = function (samlResponse, relayState, callback) 
                 if (attributes) {
                     attributes.forEach(function (attribute) {
                         var value = self.getElement(attribute, 'AttributeValue');
-                        if (typeof value[0] === 'string') {
-                            profile[attribute['$'].Name] = value[0];
-                        } else {
-                            profile[attribute['$'].Name] = value[0]['_'];
+                        if(value!=undefined) {
+                            if (typeof value[0] === 'string') {
+                                profile[attribute['$'].Name] = value[0];
+                            } else {
+                                profile[attribute['$'].Name] = value[0]['_'];
+                            }
                         }
                     });
                 }
